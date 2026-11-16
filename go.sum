@@ -1,7 +1,7 @@
 github.com/UserNobody14/tree-sitter-dart v0.0.0-20261018035034-0038280b774b h1:qHPXMi1Xccejg1S0T9YxFgKw8IYEmPSnU11ZMaWlFL8=
 github.com/UserNobody14/tree-sitter-dart v0.0.0-20261018035034-0038280b774b/go.mod h1:6zSIbyfHyxL/+XWRHElGLw+EUPYbDOyhDqIiAX6svrE=
-github.com/airbus-cert/tree-sitter-powershell v0.26.5 h1:nUrz3T20ksxo3MbAIxEPjHiEvlF8kmXwWJh0NpUa9oY=
-github.com/airbus-cert/tree-sitter-powershell v0.26.5/go.mod h1:ihQKWACaNTUeWCwwoobAeTfW0yzJr+ap/KT03U2TcYk=
+github.com/airbus-cert/tree-sitter-powershell v0.26.6 h1:WL8WL7tuV01UEb2WTZwxJcQuOz5ihnGXDoWyNo0pMvk=
+github.com/airbus-cert/tree-sitter-powershell v0.26.6/go.mod h1:ihQKWACaNTUeWCwwoobAeTfW0yzJr+ap/KT03U2TcYk=
 github.com/danieljoos/wincred v1.2.3 h1:v7dZC2x32Ut3nEfRH+vhoZGvN72+dQ/snVXo/vMFLdQ=
 github.com/danieljoos/wincred v1.2.3/go.mod h1:6qqX0WNrS4RzPZ1tnroDzq9kY3fu1KwE7MRLQK4X0bs=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
