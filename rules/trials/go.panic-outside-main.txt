@@ -1,0 +1,7 @@
+# Tried while proving the Rule trial workflow, 2026-11-17.
+well-known go-chi/chi 9f8adb1aabaa8a91180a821111d3f8e668d1c0bf
+well-known spf13/cobra adbc8813901bba65827259daa8e22ff94ec1f30e
+well-known gorilla/websocket e064f32e3674d9d79a8fd417b5bc06fa5c6cad8f
+learner TKSpectro/go-todo-api 20454bc9a66b4d29a74462a941bd4fb0d3edd43f
+learner affix/go-todo-api 55b0f917467aa6bf79cfec09839ae570db52c7a0
+learner tr1sm0s1n/gin-crud-api 899fe0c17562f350c50b68666caa17b2a1a237d1
