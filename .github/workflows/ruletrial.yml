@@ -1,0 +1,54 @@
+name: Rule trial
+
+# Tries a check on the public repositories its author chose. A pull request
+# that adds or changes rules/trials/<rule-id>.txt gets a report in this run's
+# summary: how often the rule fires on well-known and on learner projects,
+# with a link to each hit (CONTRIBUTING.md). The job reports and does not
+# judge; it fails only when a list is malformed or a repository cannot be
+# fetched or scanned.
+#
+# It runs the pull request's code with no secrets and read-only access, and
+# only parses the repositories it fetches.
+on:
+  pull_request:
+    paths:
+      - "rules/trials/**"
+
+permissions:
+  contents: read
+
+jobs:
+  trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BASE: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Go from go.mod
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build the CLI and the trial tool
+        run: |
+          go build -o "$RUNNER_TEMP/urfluency" ./cmd/urfluency
+          go build -o "$RUNNER_TEMP/ruletrial" ./cmd/ruletrial
+      - name: Try each added or changed list
+        run: |
+          tried=0
+          while IFS= read -r file; do
+            # Names come from the pull request, so only the expected shape runs.
+            if [[ ! "$file" =~ ^rules/trials/[a-z0-9][a-z0-9.-]*\.txt$ ]]; then
+              echo "skipping $file: not rules/trials/<rule-id>.txt"
+              continue
+            fi
+            echo "trying $file"
+            "$RUNNER_TEMP/ruletrial" -cli "$RUNNER_TEMP/urfluency" -cache "$RUNNER_TEMP/corpus" "$file" > "$RUNNER_TEMP/report.md"
+            { echo "# Trial of \`$file\`"; echo; cat "$RUNNER_TEMP/report.md"; } >> "$GITHUB_STEP_SUMMARY"
+            tried=$((tried + 1))
+          done < <(git diff --name-only --diff-filter=AM "$BASE" HEAD -- rules/trials/)
+          echo "lists tried: $tried"

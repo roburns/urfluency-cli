@@ -146,12 +146,25 @@ type Language struct {
 	// Authorship splits the findings rate between AI-assisted and other owned
 	// lines, so readers can see whose code a result reflects.
 	Authorship *Authorship `json:"authorship,omitempty"`
+	// Provisional lists what provisional rules found: checks still being
+	// benchmarked, which no score counts and no upload carries.
+	Provisional []ProvisionalResult `json:"provisional,omitempty"`
 
 	// weighted counts findings by category with their rules' era weights,
 	// which the score uses; idiomWeights are each idiom's weight in the
 	// idiom range (see eraShare).
 	weighted     map[string]float64
 	idiomWeights map[string]float64
+}
+
+// ProvisionalResult is what one provisional rule found in a language.
+type ProvisionalResult struct {
+	ID        string   `json:"id"`
+	Category  string   `json:"category"`
+	Title     string   `json:"title"`
+	Count     int      `json:"count"`
+	Why       string   `json:"why"`
+	Locations []string `json:"locations,omitempty"`
 }
 
 // Authorship compares AI-assisted owned lines with the rest.
@@ -381,6 +394,7 @@ func buildLanguage(lr analysis.LanguageResult, withLocations bool) Language {
 		}
 		lang.Authorship = a
 	}
+	lang.Provisional = buildProvisional(lr.Provisional, withLocations)
 	byRule := map[string]*RuleResult{}
 	for _, f := range lr.Findings {
 		rule, ok := rules.Lookup(f.Rule)
@@ -460,6 +474,34 @@ func buildLanguage(lr analysis.LanguageResult, withLocations bool) Language {
 }
 
 // BuildPrompting turns session grades into strengths, weaknesses, and focus points.
+// buildProvisional groups provisional findings by rule, sorted by ID.
+func buildProvisional(findings []analysis.Finding, withLocations bool) []ProvisionalResult {
+	byRule := map[string]*ProvisionalResult{}
+	var ids []string
+	for _, f := range findings {
+		rule, ok := rules.Lookup(f.Rule)
+		if !ok {
+			continue
+		}
+		pr := byRule[f.Rule]
+		if pr == nil {
+			pr = &ProvisionalResult{ID: rule.ID, Category: string(rule.Category), Title: rule.Title, Why: rule.Why}
+			byRule[f.Rule] = pr
+			ids = append(ids, f.Rule)
+		}
+		pr.Count++
+		if withLocations {
+			pr.Locations = append(pr.Locations, fmt.Sprintf("%s:%d", f.Path, f.Line))
+		}
+	}
+	sort.Strings(ids)
+	var out []ProvisionalResult
+	for _, id := range ids {
+		out = append(out, *byRule[id])
+	}
+	return out
+}
+
 func BuildPrompting(g facts.Sessions) *Prompting {
 	p := &Prompting{Sessions: g.Sessions, Tasks: g.Tasks, Rules: []PromptRule{}, Weaknesses: []PromptRule{}, Strengths: []string{}, Focus: []string{},
 		Edits: g.Edits, Reviewed: g.Reviewed, EditTasks: g.EditTasks, GateTasks: map[string]int{}}
@@ -649,6 +691,15 @@ func writeLanguage(b *strings.Builder, l Language) {
 	}
 	if len(l.Focus) > 0 {
 		fmt.Fprintf(b, "  Points of focus: %s\n", strings.Join(l.Focus, ", "))
+	}
+	if len(l.Provisional) > 0 {
+		b.WriteString("  Provisional checks (still being benchmarked; not scored, not uploaded)\n")
+		for _, p := range l.Provisional {
+			fmt.Fprintf(b, "    ? %s [%s]: %d\n      Why: %s\n", p.Title, p.Category, p.Count, p.Why)
+			for _, loc := range p.Locations {
+				fmt.Fprintf(b, "      at %s\n", TermSafe(loc))
+			}
+		}
 	}
 }
 

@@ -133,6 +133,10 @@ func Merge(labels []string, parts []Result) Result {
 				fd.Path = labels[i] + "/" + fd.Path
 				m.Findings = append(m.Findings, fd)
 			}
+			for _, fd := range lr.Provisional {
+				fd.Path = labels[i] + "/" + fd.Path
+				m.Provisional = append(m.Provisional, fd)
+			}
 			for _, fw := range lr.Frameworks {
 				frameworks[lr.Language][fw] = true
 			}

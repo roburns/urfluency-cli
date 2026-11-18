@@ -7,6 +7,7 @@ import (
 
 	"github.com/roburns/urfluency-cli/analysis"
 	"github.com/roburns/urfluency-cli/parsing"
+	"github.com/roburns/urfluency-cli/rules"
 )
 
 // Test files catch errors on purpose and hold long table-driven functions, so
@@ -71,4 +72,27 @@ func hasRule(fs []analysis.Finding, rule string) bool {
 		}
 	}
 	return false
+}
+
+// A scanner's rules, such as the secrets scanner's, feed the safety verdict
+// shown for other people's repositories, which has no place for a finding
+// that does not count. They are benchmarked before they are merged and
+// never provisional (CONTRIBUTING.md). The safety package's own rules are
+// not catalog rules and have no provisional state.
+func TestScannerRulesAreNeverProvisional(t *testing.T) {
+	checked := 0
+	for _, r := range rules.All() {
+		for _, l := range r.Languages {
+			if !analysis.IsScanner(l) {
+				continue
+			}
+			checked++
+			if r.Provisional {
+				t.Errorf("scanner rule %s is provisional", r.ID)
+			}
+		}
+	}
+	if checked == 0 {
+		t.Error("no scanner rules found: the check is looking in the wrong place")
+	}
 }

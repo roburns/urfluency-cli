@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/roburns/urfluency-cli/rules"
 	"os"
 	"path/filepath"
 	"strings"
@@ -85,6 +86,19 @@ func TestDismiss(t *testing.T) {
 	}
 	if code := Run(context.Background(), []string{"dismiss", "sec.no-such-rule", at}, &out, &errOut); code != 2 {
 		t.Errorf("an unknown rule exit = %d, want 2", code)
+	}
+}
+
+// A provisional check counts toward nothing, so dismissing one is refused
+// instead of being recorded with no effect.
+func TestDismissRefusesProvisionalRule(t *testing.T) {
+	t.Setenv("URFLUENCY_CONFIG_DIR", t.TempDir())
+	rules.Register(rules.Rule{ID: "trial.cli-unproven", Category: rules.CleanCode, Languages: []string{"trial"},
+		Title: "Unproven", Why: "w", Focus: "f", Provisional: true})
+	var out, errOut bytes.Buffer
+	code := Run(context.Background(), []string{"dismiss", "trial.cli-unproven", "a.go:1"}, &out, &errOut)
+	if code != 2 || !strings.Contains(errOut.String(), "provisional") {
+		t.Errorf("exit = %d, stderr = %q; want 2 and a message naming it provisional", code, errOut.String())
 	}
 }
 
