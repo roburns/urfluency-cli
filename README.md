@@ -348,6 +348,13 @@ follows the line if the file moves and lapses if the line changes. Reports and
 uploads say how many findings you dismissed, and under which rule ids, never which findings,
 so urFluency can see which rules people judge wrong and tune them.
 
+## Contributing
+
+Reports of wrong findings, fixes, and new checks are welcome; see
+[CONTRIBUTING.md](CONTRIBUTING.md). A new check starts as provisional: your
+local report shows what it finds, and it counts toward no score and is never
+uploaded until it has passed urFluency's benchmark.
+
 ## License
 
 The [Functional Source License, Version 1.1, MIT Future License](LICENSE.md)

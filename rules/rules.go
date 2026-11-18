@@ -44,6 +44,10 @@ type Rule struct {
 	// commanding it (see Tier); empty is Practice for a problem and Basic
 	// for an idiom or construct.
 	Tier Tier
+	// Provisional marks a rule that has not yet passed the benchmark
+	// (CONTRIBUTING.md). Its findings are shown in the local report and
+	// kept out of every score and every upload.
+	Provisional bool
 }
 
 var (
@@ -118,10 +122,14 @@ func All() []Rule {
 	return out
 }
 
-// ForLanguage returns the rules that apply to a language, sorted by ID.
+// ForLanguage returns the rules a language is scored on, sorted by ID.
+// Provisional rules are left out; Lookup and All still return them.
 func ForLanguage(language string) []Rule {
 	var out []Rule
 	for _, r := range catalog {
+		if r.Provisional {
+			continue
+		}
 		for _, l := range r.Languages {
 			if l == language {
 				out = append(out, r)

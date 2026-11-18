@@ -992,6 +992,42 @@ interface, sharing Git access, ownership, and the rule catalog.
 Adding a language means adding an analyzer package and its rules; the CLI, upload
 format, and service do not change.
 
+### Provisional rules (built 2026-11-17)
+
+A rule can be marked `Provisional` in the catalog: merged and running, but not
+yet measured on the benchmark. Contributed checks start this way
+([CONTRIBUTING.md](CONTRIBUTING.md)), so the open repository can take a check
+before urFluency has decided that it should move ratings.
+
+- **Shown.** The local report lists what provisional rules found, per
+  language, under "Provisional checks", with locations as for other findings.
+- **Not scored.** The engine sets provisional findings aside before it counts
+  or dates anything, so they are not findings, idioms, AI-assisted findings,
+  or evidence, and cannot change a line's year. `rules.ForLanguage`, which the
+  models use for the rules a language is scored on, leaves provisional rules
+  out. The local and official models therefore need no knowledge of the state.
+- **Not uploaded.** The facts, summary, and combined result are built from
+  what is scored, so an upload is byte-for-byte the same with and without
+  provisional findings. Sending their counts, to see how often a provisional
+  rule fires, would change what leaves the machine and is not done.
+- **Not for scanners.** Scanner rules, such as the secrets scanner's, feed
+  the safety verdict, which is shown for other people's repositories and has
+  no place for a finding that does not count. A test fails if one is
+  provisional; the safety package's own rules have no such state.
+- **Listed when scored.** `rules/scored.txt` lists every rule that counts,
+  and a test fails when a rule is neither provisional nor listed. Promotion
+  is therefore a visible change to that file.
+- **Tried on repositories its author chose.** A provisional rule has
+  `rules/trials/<rule-id>.txt`: public GitHub repositories at full commit
+  IDs, at least three well-known and three learner ones. `cmd/ruletrial`
+  scans them and reports the rule's hits per tier with a link to each, and
+  the Rule trial workflow runs it on pull requests that change a list, with
+  no secrets. The private benchmark, on repositories the author did not
+  choose, stays the gate before a rule counts.
+- **Promotion.** Removing `Provisional` in a release makes the rule count,
+  and the catalog version changes with it. The official model scores it once
+  the service pins that release.
+
 ### Upload format
 
 Built (2026-10-27) as the public `upload` package, which the CLI and the API

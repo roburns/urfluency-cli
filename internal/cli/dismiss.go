@@ -81,8 +81,12 @@ func dismiss(args []string, stdout io.Writer) error {
 		return fmt.Errorf("%w: dismiss takes a rule id and FILE:LINE, as scan --json --locations shows them", errUsage)
 	}
 	rule, at := pos[0], pos[1]
-	if _, ok := rules.Lookup(rule); !ok {
+	known, ok := rules.Lookup(rule)
+	if !ok {
 		return fmt.Errorf("%w: unknown rule %q; use the rule id a scan shows, such as sec.hardcoded-password", errUsage, rule)
+	}
+	if known.Provisional {
+		return fmt.Errorf("%w: %s is a provisional check, which counts toward no score, so there is nothing to dismiss; report a wrong finding as an issue", errUsage, rule)
 	}
 	path, n, err := fileLine(at)
 	if err != nil {

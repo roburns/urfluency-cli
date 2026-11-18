@@ -9,6 +9,14 @@ sums up the release in one line. Each change is a bullet that starts with
 `New:`, `Improved:`, `Fixed:`, or `Security:`, written for people who use the
 CLI rather than for people who work on it.
 
+## v1.10.0 (2026-11-17)
+
+Anyone can now contribute a check, and a new check is measured before it can affect a rating.
+
+- New: CONTRIBUTING.md explains how to report a wrong finding, fix a check, or add one for any of the supported languages, with a worked example. You can propose a check without writing code.
+- New: A new check ships as provisional first. Your local report lists what it finds under "Provisional checks", and scan --json lists it under "provisional" for each language. A provisional check counts toward no score and nothing about it is uploaded. No check is provisional in this release, so your report and ratings are unchanged.
+- New: Two tools for people writing checks, run from a clone of the repository: go run ./cmd/syntaxtree prints the syntax tree an analyzer sees for a file, and go run ./cmd/ruletrial tries a check on public repositories you choose and links every place it fires.
+
 ## v1.9.4 (2026-11-12)
 
 - Security: Scanning a folder no longer lets that folder's own Git settings run a program. A folder you did not create with git clone, such as a downloaded archive that includes its .git directory, could name a program in .git/config that Git then ran during urfluency scan, upload, and career. Every Git command the CLI runs now overrides those settings. Update before scanning folders from other people. urfluency check on a repository URL was not affected.

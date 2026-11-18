@@ -123,6 +123,10 @@ type LanguageResult struct {
 	// Evidence counts owned functions and their complexity; nil when the
 	// analyzer measured no function on owned lines.
 	Evidence *Evidence
+	// Provisional are findings on owned lines from provisional rules
+	// (rules.Rule.Provisional), problems and strengths alike. They are shown
+	// in the local report and count toward nothing above.
+	Provisional []Finding
 }
 
 // IdiomUse is how often, and in how many files and functions, owned code
@@ -496,6 +500,15 @@ func run(ctx context.Context, name string, group []ownedFile,
 	if err != nil {
 		return lr, runCounts{unanalyzed: unanalyzed}, fmt.Errorf("%s analyzer: %w", name, err)
 	}
+	// Provisional findings leave before anything is counted or dated, so a
+	// provisional rule cannot move a score.
+	findings, provisional := splitProvisional(findings)
+	for _, fd := range provisional {
+		if owned[fd.Path][fd.Line] != "" {
+			lr.Provisional = append(lr.Provisional, fd)
+		}
+	}
+	sortFindings(lr.Provisional)
 	content := map[string][]byte{}
 	for _, f := range group {
 		content[f.file.Path] = f.file.Content
@@ -568,13 +581,30 @@ func run(ctx context.Context, name string, group []ownedFile,
 			lr.AssistedByRule[fd.Rule]++
 		}
 	}
-	sort.Slice(lr.Findings, func(i, j int) bool {
-		if lr.Findings[i].Path != lr.Findings[j].Path {
-			return lr.Findings[i].Path < lr.Findings[j].Path
-		}
-		return lr.Findings[i].Line < lr.Findings[j].Line
-	})
+	sortFindings(lr.Findings)
 	return lr, runCounts{dismissed: skipped, dismissedByRule: skippedByRule, unanalyzed: unanalyzed}, nil
+}
+
+// splitProvisional separates the findings of provisional rules from the rest.
+func splitProvisional(findings []Finding) (scored, provisional []Finding) {
+	for _, fd := range findings {
+		if r, ok := rules.Lookup(fd.Rule); ok && r.Provisional {
+			provisional = append(provisional, fd)
+			continue
+		}
+		scored = append(scored, fd)
+	}
+	return scored, provisional
+}
+
+// sortFindings orders findings by path, then line.
+func sortFindings(fs []Finding) {
+	sort.Slice(fs, func(i, j int) bool {
+		if fs[i].Path != fs[j].Path {
+			return fs[i].Path < fs[j].Path
+		}
+		return fs[i].Line < fs[j].Line
+	})
 }
 
 // functionStarts returns, for a line of a file, the start line of the
